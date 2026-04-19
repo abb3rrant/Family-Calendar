@@ -1,0 +1,60 @@
+# Copy to config.yaml and fill in your values. Never commit config.yaml.
+
+server:
+  host: 0.0.0.0
+  port: 8000
+
+weather:
+  # Find yours at https://www.latlong.net/
+  latitude: 37.7749
+  longitude: -122.4194
+  timezone: America/Los_Angeles
+  unit: fahrenheit  # or "celsius"
+
+sync:
+  # How often to poll iCloud for changes (seconds).
+  interval_seconds: 120
+
+# One entry per family member's iCloud account.
+# Generate an app-specific password at https://appleid.apple.com (Sign-In and
+# Security -> App-Specific Passwords). This is NOT your regular Apple password.
+accounts:
+  - id: alice
+    apple_id: alice@icloud.com
+    app_password: xxxx-xxxx-xxxx-xxxx
+  - id: bob
+    apple_id: bob@icloud.com
+    app_password: xxxx-xxxx-xxxx-xxxx
+
+# One entry per iCloud calendar you want to display.
+# display_name must match the calendar name in iCloud EXACTLY.
+# To list what's available, start the backend and GET /api/config/discover/{account_id}.
+calendars:
+  - id: alice-personal
+    account: alice
+    display_name: "Alice"        # the name shown in the iCloud Calendar app
+    person: Alice
+    color: "#FF6B6B"
+  - id: bob-personal
+    account: bob
+    display_name: "Bob"
+    person: Bob
+    color: "#4A90E2"
+  - id: family-shared
+    account: alice              # whichever account owns / is subscribed to it
+    display_name: "Family"
+    person: Family
+    color: "#7B61FF"
+  - id: soccer
+    account: alice
+    display_name: "Soccer"
+    person: Family
+    category: Soccer
+    color: "#4ECDC4"
+  - id: work
+    account: alice
+    display_name: "Work"
+    person: Alice
+    category: Work
+    color: "#F5A623"
+    writable: false             # if you never want to edit work meetings from here

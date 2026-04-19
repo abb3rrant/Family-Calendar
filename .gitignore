@@ -1,0 +1,80 @@
+# ───── Project: secrets, runtime data, user uploads ─────
+config.yaml
+backend/data/
+backend/photos/
+backend/.venv/
+
+# ───── Python ─────
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+build/
+develop-eggs/
+.eggs/
+sdist/
+wheels/
+pip-wheel-metadata/
+
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# ───── Node / Vite / TypeScript ─────
+node_modules/
+dist/
+.vite/
+.parcel-cache/
+*.tsbuildinfo
+.eslintcache
+
+# Bundler debug/lockfile noise
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# ───── SQLite stragglers (in case a DB lands outside backend/data/) ─────
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ───── Logs ─────
+*.log
+logs/
+
+# ───── Environment / secrets ─────
+.env
+.env.*
+!.env.example
+
+# ───── Editor / IDE ─────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.history/
+
+# ───── OS junk ─────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini

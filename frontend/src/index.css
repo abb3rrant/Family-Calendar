@@ -1,0 +1,221 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --card: rgba(15, 23, 42, 0.04);
+  --card-strong: rgba(15, 23, 42, 0.08);
+  --card-hover: rgba(15, 23, 42, 0.06);
+  --border: rgba(15, 23, 42, 0.08);
+  --text: #0f172a;
+  --text-soft: #334155;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-soft: rgba(59, 130, 246, 0.12);
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.15);
+  --shadow: 0 10px 40px rgba(15, 23, 42, 0.12);
+  --fc-today: rgba(59, 130, 246, 0.08);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-strong: rgba(255, 255, 255, 0.1);
+  --card-hover: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f1f5f9;
+  --text-soft: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  --accent: #4a90e2;
+  --accent-hover: #60a5fa;
+  --accent-soft: rgba(74, 144, 226, 0.18);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.15);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --fc-today: rgba(74, 144, 226, 0.12);
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* FullCalendar theming */
+.fc {
+  --fc-border-color: var(--border);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: var(--card);
+  --fc-today-bg-color: var(--fc-today);
+  --fc-event-text-color: #fff;
+  font-family: inherit;
+  height: 100%;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number,
+.fc .fc-list-day-cushion,
+.fc .fc-timegrid-axis-cushion,
+.fc .fc-timegrid-slot-label-cushion {
+  color: var(--text-soft);
+  text-decoration: none;
+}
+
+.fc .fc-list-event:hover td {
+  background: var(--card-hover);
+}
+
+.fc .fc-list-day-cushion {
+  background: var(--card);
+}
+
+.fc .fc-event {
+  border: none;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fc .fc-button {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.fc .fc-button:hover,
+.fc .fc-button:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* On-screen keyboard */
+@keyframes oskSlideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Ken Burns slideshow effect */
+@keyframes kenburns {
+  0%   { transform: scale(1.0) translate(0, 0); }
+  100% { transform: scale(1.12) translate(-1.5%, -1%); }
+}
+
+/* Auto-scroll long event titles to reveal the full text */
+@keyframes eventTitleMarquee {
+  0%, 18% {
+    transform: translateX(0);
+  }
+  82%, 100% {
+    transform: translateX(var(--marquee-distance, 0));
+  }
+}
+
+@keyframes fadeOut {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.osk-theme.hg-theme-default {
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+}
+
+.osk-theme .hg-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.osk-theme .hg-row:last-child {
+  margin-bottom: 0;
+}
+
+.osk-theme .hg-button {
+  background: var(--card-strong);
+  color: var(--text);
+  border: 0;
+  border-radius: 10px;
+  height: 52px;
+  min-width: 40px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  transition: transform 60ms ease, background 120ms ease;
+}
+
+.osk-theme .hg-button:active {
+  background: var(--accent);
+  color: #fff;
+  transform: translateY(1px);
+}
+
+.osk-theme .hg-button.hg-button-space {
+  flex: 4;
+}
+
+.osk-theme .hg-button.hg-button-enter,
+.osk-theme .hg-button.hg-button-bksp,
+.osk-theme .hg-button.hg-button-shift,
+.osk-theme .hg-button.hg-button-symbols,
+.osk-theme .hg-button.hg-button-close {
+  flex: 1.4;
+  background: var(--card);
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.osk-theme .hg-button.hg-button-enter {
+  background: var(--accent);
+  color: #fff;
+}
+
+.osk-theme .hg-button.hg-button-close {
+  color: var(--text-muted);
+}
+
+/* Let content shift a little so the keyboard doesn't cover focused inputs */
+body.osk-open {
+  padding-bottom: 320px;
+  transition: padding-bottom 180ms ease;
+}
+
+/* Keep fixed modals visible above the keyboard */
+body.osk-open .osk-modal-shift {
+  align-items: flex-start;
+  padding-top: 4vh;
+}
+
