@@ -16,6 +16,7 @@ dependencies = [
     "sse-starlette>=2.1",
     "holidays>=0.58",
     "python-multipart>=0.0.20",
+    "ring-doorbell>=0.9",
 ]
 
 [project.optional-dependencies]

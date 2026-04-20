@@ -136,6 +136,8 @@ class GeneralSettingsOut(BaseModel):
     theme_auto: bool
     theme_dark_start_hour: int
     theme_light_start_hour: int
+    allowance_point_value_cents: int
+    allowance_week_starts_on: int
 
 
 class GeneralSettingsUpdate(BaseModel):
@@ -160,6 +162,8 @@ class GeneralSettingsUpdate(BaseModel):
     theme_auto: bool | None = None
     theme_dark_start_hour: int | None = Field(default=None, ge=0, le=23)
     theme_light_start_hour: int | None = Field(default=None, ge=0, le=23)
+    allowance_point_value_cents: int | None = Field(default=None, ge=1, le=10000)
+    allowance_week_starts_on: int | None = Field(default=None, ge=0, le=6)
 
     @field_validator(
         "us_holiday_color", "christian_holiday_color", "birthday_color"
@@ -468,6 +472,8 @@ def get_general():
             theme_auto=s.theme_auto,
             theme_dark_start_hour=s.theme_dark_start_hour,
             theme_light_start_hour=s.theme_light_start_hour,
+            allowance_point_value_cents=s.allowance_point_value_cents,
+            allowance_week_starts_on=s.allowance_week_starts_on,
         )
 
 
@@ -505,6 +511,8 @@ def update_general(payload: GeneralSettingsUpdate, request: Request):
             theme_auto=s.theme_auto,
             theme_dark_start_hour=s.theme_dark_start_hour,
             theme_light_start_hour=s.theme_light_start_hour,
+            allowance_point_value_cents=s.allowance_point_value_cents,
+            allowance_week_starts_on=s.allowance_week_starts_on,
         )
 
     _reload(request)

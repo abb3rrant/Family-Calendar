@@ -85,6 +85,8 @@ class Settings(Base):
     theme_auto: Mapped[bool] = mapped_column(Boolean, default=False)
     theme_dark_start_hour: Mapped[int] = mapped_column(Integer, default=20)
     theme_light_start_hour: Mapped[int] = mapped_column(Integer, default=7)
+    allowance_point_value_cents: Mapped[int] = mapped_column(Integer, default=25)
+    allowance_week_starts_on: Mapped[int] = mapped_column(Integer, default=0)  # 0=Sun
 
 
 class Event(Base):
@@ -189,6 +191,44 @@ class Photo(Base):
     content_type: Mapped[str | None] = mapped_column(String, nullable=True)
     size_bytes: Mapped[int] = mapped_column(Integer, default=0)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class Person(Base):
+    __tablename__ = "people"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String)
+    emoji: Mapped[str | None] = mapped_column(String, nullable=True)
+    color: Mapped[str] = mapped_column(String, default="#4A90E2")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class AllowanceChore(Base):
+    __tablename__ = "allowance_chores"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String)
+    emoji: Mapped[str | None] = mapped_column(String, nullable=True)
+    points: Mapped[int] = mapped_column(Integer, default=1)
+    person_id: Mapped[int | None] = mapped_column(
+        ForeignKey("people.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class AllowanceCompletion(Base):
+    __tablename__ = "allowance_completions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    chore_id: Mapped[int] = mapped_column(
+        ForeignKey("allowance_chores.id", ondelete="CASCADE"), index=True
+    )
+    person_id: Mapped[int] = mapped_column(
+        ForeignKey("people.id", ondelete="CASCADE"), index=True
+    )
+    points: Mapped[int] = mapped_column(Integer)
+    completed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
+    paid_out_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class ReminderFired(Base):

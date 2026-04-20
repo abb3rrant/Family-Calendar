@@ -96,6 +96,46 @@ export interface GeneralSettings {
   theme_auto: boolean;
   theme_dark_start_hour: number;
   theme_light_start_hour: number;
+  allowance_point_value_cents: number;
+  allowance_week_starts_on: number;
+}
+
+export interface Person {
+  id: number;
+  name: string;
+  emoji: string | null;
+  color: string;
+}
+
+export interface AllowanceChore {
+  id: number;
+  name: string;
+  emoji: string | null;
+  points: number;
+  person_id: number | null;
+}
+
+export interface AllowanceCompletion {
+  id: number;
+  chore_id: number;
+  person_id: number;
+  points: number;
+  completed_at: string;
+  paid_out_at: string | null;
+}
+
+export interface PersonWeekSummary {
+  person: Person;
+  points_total: number;
+  earnings_cents: number;
+  completions: AllowanceCompletion[];
+}
+
+export interface WeekSummary {
+  week_start: string;
+  week_end: string;
+  point_value_cents: number;
+  people: PersonWeekSummary[];
 }
 
 export interface LanUrl {

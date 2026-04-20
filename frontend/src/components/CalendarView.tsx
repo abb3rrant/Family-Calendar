@@ -3,7 +3,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { type DateClickArg } from "@fullcalendar/interaction";
 import rrulePlugin from "@fullcalendar/rrule";
 import { useQuery } from "@tanstack/react-query";
 import type {
@@ -16,6 +16,8 @@ import { addDays, endOfMonth, startOfMonth, subDays } from "date-fns";
 import { api } from "../api";
 import type { CalendarEvent, CalendarMeta } from "../types";
 import { EventModal } from "./EventModal";
+import { EventDetailsModal } from "./EventDetailsModal";
+import { DayDetailModal } from "./DayDetailModal";
 
 export type ViewKind = "week" | "month" | "agenda";
 
@@ -36,8 +38,10 @@ export function CalendarView({ view, calendars }: Props) {
   const [windowEnd, setWindowEnd] = useState(() => addDays(endOfMonth(new Date()), 60));
   const [modalState, setModalState] = useState<
     | { kind: "closed" }
+    | { kind: "details"; event: CalendarEvent }
     | { kind: "edit"; event: CalendarEvent }
     | { kind: "create"; start: Date; end: Date; allDay: boolean }
+    | { kind: "day"; date: Date }
   >({ kind: "closed" });
 
   useEffect(() => {
@@ -107,6 +111,9 @@ export function CalendarView({ view, calendars }: Props) {
           }
         }}
         select={(arg: DateSelectArg) => {
+          // Drag-to-select on week view still creates; skip on month view
+          // because dateClick below already opens the day detail modal.
+          if (arg.view.type === "dayGridMonth") return;
           setModalState({
             kind: "create",
             start: arg.start,
@@ -114,14 +121,43 @@ export function CalendarView({ view, calendars }: Props) {
             allDay: arg.allDay,
           });
         }}
+        dateClick={(arg: DateClickArg) => {
+          if (arg.view.type === "dayGridMonth") {
+            setModalState({ kind: "day", date: arg.date });
+          }
+        }}
         eventClick={(arg: EventClickArg) => {
           const ev = arg.event.extendedProps.event as CalendarEvent;
-          const cal = calendars.find((c) => c.id === ev.calendar_id);
-          if (!cal || !cal.writable) return;
-          setModalState({ kind: "edit", event: ev });
+          setModalState({ kind: "details", event: ev });
         }}
       />
-      {modalState.kind !== "closed" && (
+      {modalState.kind === "details" && (
+        <EventDetailsModal
+          event={modalState.event}
+          calendars={calendars}
+          onClose={() => setModalState({ kind: "closed" })}
+          onEdit={() =>
+            setModalState({ kind: "edit", event: modalState.event })
+          }
+        />
+      )}
+      {modalState.kind === "day" && (
+        <DayDetailModal
+          date={modalState.date}
+          events={events}
+          calendars={calendars}
+          onClose={() => setModalState({ kind: "closed" })}
+          onOpenEvent={(ev) => setModalState({ kind: "details", event: ev })}
+          onCreateEvent={(d) => {
+            const start = new Date(d);
+            start.setHours(9, 0, 0, 0);
+            const end = new Date(start);
+            end.setHours(10, 0, 0, 0);
+            setModalState({ kind: "create", start, end, allDay: false });
+          }}
+        />
+      )}
+      {(modalState.kind === "edit" || modalState.kind === "create") && (
         <EventModal
           calendars={calendars}
           initialEvent={modalState.kind === "edit" ? modalState.event : null}

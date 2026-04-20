@@ -5,7 +5,7 @@ import type { CalendarMeta } from "./types";
 import { CalendarView, type ViewKind } from "./components/CalendarView";
 import { ViewToggle } from "./components/ViewToggle";
 import { Weather } from "./components/Weather";
-import { Chores } from "./components/Chores";
+import { Todos } from "./components/Todos";
 import { Clock } from "./components/Clock";
 import { CalendarLegend } from "./components/CalendarLegend";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -15,12 +15,13 @@ import { OnScreenKeyboard } from "./components/OnScreenKeyboard";
 import { PagesContainer } from "./components/PagesContainer";
 import { MealPlannerPage } from "./components/MealPlannerPage";
 import { HomePage } from "./components/HomePage";
+import { ChoresPage } from "./components/ChoresPage";
 import { HeroBanner } from "./components/HeroBanner";
 import { PhotoSlideshow } from "./components/PhotoSlideshow";
 import { ConnectionStatus } from "./components/ConnectionStatus";
 import { useServerEvents } from "./lib/sse";
 
-const PAGE_LABELS = ["Calendar", "Meals", "Home"];
+const PAGE_LABELS = ["Calendar", "Meals", "Home", "Chores"];
 
 export default function App() {
   const sseStatus = useServerEvents();
@@ -75,6 +76,9 @@ export default function App() {
           <div className="h-full">
             <HomePage />
           </div>
+          <div className="h-full">
+            <ChoresPage />
+          </div>
         </PagesContainer>
         <HeroBanner />
       </main>
@@ -82,7 +86,7 @@ export default function App() {
         <Clock />
         <Weather />
         <CalendarLegend calendars={calendars} />
-        <Chores />
+        <Todos />
       </aside>
       <OnScreenKeyboard />
       <PhotoSlideshow />

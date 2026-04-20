@@ -14,6 +14,7 @@ from .config import load_from_db, maybe_import_yaml_seed
 from .db import init_db
 from .events_bus import bus
 from .routers import (
+    allowance,
     chores,
     config as config_router,
     countdowns,
@@ -121,6 +122,7 @@ app.include_router(notes.router)
 app.include_router(reminders.router)
 app.include_router(photos.router)
 app.include_router(network.router)
+app.include_router(allowance.router)
 app.include_router(weather.router)
 app.include_router(config_router.router)
 app.include_router(settings_router.router)

@@ -1,6 +1,10 @@
 import type {
   AccountInfo,
+  AllowanceChore,
+  AllowanceCompletion,
   Birthday,
+  Person,
+  WeekSummary,
   CalendarEvent,
   CalendarMeta,
   CalendarProfile,
@@ -352,4 +356,56 @@ export const api = {
   deletePhoto: (id: number) =>
     jsonFetch<void>(`/api/photos/${id}`, { method: "DELETE" }),
   getLanUrl: () => jsonFetch<LanUrl>("/api/network/lan-url"),
+
+  listPeople: () => jsonFetch<Person[]>("/api/allowance/people"),
+  createPerson: (payload: { name: string; emoji?: string | null; color?: string }) =>
+    jsonFetch<Person>("/api/allowance/people", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updatePerson: (id: number, payload: Partial<Omit<Person, "id">>) =>
+    jsonFetch<Person>(`/api/allowance/people/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deletePerson: (id: number) =>
+    jsonFetch<void>(`/api/allowance/people/${id}`, { method: "DELETE" }),
+
+  listAllowanceChores: () =>
+    jsonFetch<AllowanceChore[]>("/api/allowance/chores"),
+  createAllowanceChore: (payload: {
+    name: string;
+    emoji?: string | null;
+    points: number;
+    person_id?: number | null;
+  }) =>
+    jsonFetch<AllowanceChore>("/api/allowance/chores", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateAllowanceChore: (id: number, payload: Partial<Omit<AllowanceChore, "id">>) =>
+    jsonFetch<AllowanceChore>(`/api/allowance/chores/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deleteAllowanceChore: (id: number) =>
+    jsonFetch<void>(`/api/allowance/chores/${id}`, { method: "DELETE" }),
+
+  recordCompletion: (payload: { chore_id: number; person_id?: number }) =>
+    jsonFetch<AllowanceCompletion>("/api/allowance/completions", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  deleteCompletion: (id: number) =>
+    jsonFetch<void>(`/api/allowance/completions/${id}`, { method: "DELETE" }),
+
+  allowanceWeek: (day?: string) =>
+    jsonFetch<WeekSummary>(
+      "/api/allowance/week" + (day ? `?day=${encodeURIComponent(day)}` : "")
+    ),
+  payOutAllowance: (payload: { person_id: number; day?: string }) =>
+    jsonFetch<void>("/api/allowance/payout", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };

@@ -66,6 +66,8 @@ _ADDED_COLUMNS: list[tuple[str, str, str]] = [
     ("settings", "theme_auto", "BOOLEAN NOT NULL DEFAULT 0"),
     ("settings", "theme_dark_start_hour", "INTEGER NOT NULL DEFAULT 20"),
     ("settings", "theme_light_start_hour", "INTEGER NOT NULL DEFAULT 7"),
+    ("settings", "allowance_point_value_cents", "INTEGER NOT NULL DEFAULT 25"),
+    ("settings", "allowance_week_starts_on", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
 

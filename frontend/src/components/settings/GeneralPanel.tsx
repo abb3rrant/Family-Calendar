@@ -274,6 +274,68 @@ export function GeneralPanel() {
       </section>
 
       <section className="rounded-xl bg-[var(--card)] p-4 space-y-3">
+        <h3 className="font-medium text-[var(--text)]">Allowance</h3>
+        <p className="text-xs text-[var(--text-muted)]">
+          Used by the Chores page — points earned per chore convert to money
+          each week.
+        </p>
+        <div>
+          <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mb-1">
+            <span>Point value</span>
+            <span>
+              ${(draft.allowance_point_value_cents / 100).toFixed(2)} per point
+            </span>
+          </div>
+          <input
+            type="range"
+            min={5}
+            max={500}
+            step={5}
+            value={draft.allowance_point_value_cents}
+            onChange={(e) =>
+              setDraft({
+                ...draft,
+                allowance_point_value_cents: parseInt(e.target.value, 10),
+              })
+            }
+            onMouseUp={() =>
+              saveMut.mutate({
+                allowance_point_value_cents: draft.allowance_point_value_cents,
+              })
+            }
+            onTouchEnd={() =>
+              saveMut.mutate({
+                allowance_point_value_cents: draft.allowance_point_value_cents,
+              })
+            }
+            className="w-full"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-[var(--text-muted)] mb-1">
+            Week starts on
+          </label>
+          <select
+            value={draft.allowance_week_starts_on}
+            onChange={(e) => {
+              const v = parseInt(e.target.value, 10);
+              setDraft({ ...draft, allowance_week_starts_on: v });
+              saveMut.mutate({ allowance_week_starts_on: v });
+            }}
+            className={inputCls}
+          >
+            <option value={0}>Sunday</option>
+            <option value={1}>Monday</option>
+            <option value={2}>Tuesday</option>
+            <option value={3}>Wednesday</option>
+            <option value={4}>Thursday</option>
+            <option value={5}>Friday</option>
+            <option value={6}>Saturday</option>
+          </select>
+        </div>
+      </section>
+
+      <section className="rounded-xl bg-[var(--card)] p-4 space-y-3">
         <h3 className="font-medium text-[var(--text)]">Sync</h3>
         <div>
           <label className="block text-xs text-[var(--text-muted)] mb-1">

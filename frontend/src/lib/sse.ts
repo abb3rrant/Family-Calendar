@@ -35,6 +35,10 @@ export function useServerEvents(): SseStatus {
         queryClient.invalidateQueries({ queryKey: ["notes"] });
       } else if (payload === "photos-updated") {
         queryClient.invalidateQueries({ queryKey: ["photos"] });
+      } else if (payload === "allowance-updated") {
+        queryClient.invalidateQueries({ queryKey: ["allowance-week"] });
+        queryClient.invalidateQueries({ queryKey: ["allowance-people"] });
+        queryClient.invalidateQueries({ queryKey: ["allowance-chores"] });
       } else if (payload === "settings-updated") {
         queryClient.invalidateQueries({ queryKey: ["accounts"] });
         queryClient.invalidateQueries({ queryKey: ["calendar-profiles"] });

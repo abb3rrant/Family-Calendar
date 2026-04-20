@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import type { Chore } from "../types";
 
-export function Chores() {
+export function Todos() {
   const queryClient = useQueryClient();
   const [newTitle, setNewTitle] = useState("");
 
@@ -36,7 +36,7 @@ export function Chores() {
   return (
     <div className="rounded-2xl bg-[var(--card)] p-4 flex-1 flex flex-col min-h-0">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-[var(--text)]">Chores</h2>
+        <h2 className="text-lg font-semibold text-[var(--text)]">To-Dos</h2>
         <span className="text-xs text-[var(--text-muted)]">
           {chores.filter((c) => !c.done).length} open
         </span>
@@ -50,7 +50,7 @@ export function Chores() {
       >
         <input
           className="flex-1 rounded-lg bg-[var(--card-strong)] text-[var(--text)] px-3 py-2 text-sm placeholder:text-[var(--text-faint)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          placeholder="Add a chore…"
+          placeholder="Add a to-do…"
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
         />
@@ -98,7 +98,7 @@ export function Chores() {
         ))}
         {chores.length === 0 && (
           <li className="text-[var(--text-muted)] text-sm text-center py-6">
-            No chores yet.
+            No to-dos yet.
           </li>
         )}
       </ul>
