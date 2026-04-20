@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Family Photo Drop</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: #0f172a;
+        color: #f1f5f9;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      main {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 32px 24px 48px;
+        max-width: 520px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin: 0 0 6px;
+      }
+      .sub {
+        color: #94a3b8;
+        font-size: 0.95rem;
+        margin-bottom: 32px;
+      }
+      .choose {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 18px;
+        border-radius: 16px;
+        border: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 80ms ease;
+      }
+      .btn:active { transform: scale(0.98); }
+      .btn-primary {
+        background: #3b82f6;
+        color: #fff;
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: #f1f5f9;
+      }
+      input[type="file"] { display: none; }
+      .status {
+        font-size: 0.95rem;
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-top: 20px;
+      }
+      .status.info { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+      .status.ok { background: rgba(74, 222, 128, 0.15); color: #86efac; }
+      .status.err { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+      progress {
+        width: 100%;
+        margin-top: 12px;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      progress::-webkit-progress-bar { background: rgba(255,255,255,0.08); border-radius: 4px; }
+      progress::-webkit-progress-value { background: #3b82f6; }
+      .preview {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 24px;
+      }
+      .preview img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+      footer {
+        margin-top: auto;
+        padding-top: 32px;
+        color: #64748b;
+        font-size: 0.8rem;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>📸 Family Photo Drop</h1>
+      <p class="sub">
+        Pick photos from your phone. They'll land on the dashboard slideshow.
+      </p>
+
+      <div class="choose">
+        <label for="camera" class="btn btn-primary">📷 Take a photo</label>
+        <input id="camera" type="file" accept="image/*" capture="environment" />
+
+        <label for="library" class="btn btn-secondary">🖼️ Choose from library</label>
+        <input id="library" type="file" accept="image/*" multiple />
+      </div>
+
+      <div id="previews" class="preview"></div>
+      <div id="status"></div>
+
+      <footer>Uploads directly to your family dashboard.<br />No account, no cloud.</footer>
+    </main>
+
+    <script>
+      const camera = document.getElementById("camera");
+      const library = document.getElementById("library");
+      const status = document.getElementById("status");
+      const previews = document.getElementById("previews");
+
+      function setStatus(message, kind = "info", progressEl = null) {
+        status.className = "status " + kind;
+        status.innerHTML = "";
+        status.appendChild(document.createTextNode(message));
+        if (progressEl) status.appendChild(progressEl);
+      }
+
+      function showPreviews(files) {
+        previews.innerHTML = "";
+        Array.from(files).slice(0, 12).forEach((file) => {
+          const img = document.createElement("img");
+          img.src = URL.createObjectURL(file);
+          img.onload = () => URL.revokeObjectURL(img.src);
+          previews.appendChild(img);
+        });
+      }
+
+      async function upload(files) {
+        if (!files || !files.length) return;
+        showPreviews(files);
+        const form = new FormData();
+        for (const f of files) form.append("files", f);
+
+        const bar = document.createElement("progress");
+        bar.max = 100;
+        bar.value = 0;
+        setStatus(`Uploading ${files.length} photo${files.length > 1 ? "s" : ""}…`, "info", bar);
+
+        await new Promise((resolve) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/api/photos");
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) bar.value = (e.loaded / e.total) * 100;
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText);
+                setStatus(
+                  `✓ Added ${data.length} photo${data.length > 1 ? "s" : ""} to the slideshow.`,
+                  "ok"
+                );
+              } catch {
+                setStatus("✓ Uploaded.", "ok");
+              }
+            } else {
+              let msg = "Upload failed.";
+              try {
+                const data = JSON.parse(xhr.responseText);
+                if (data.detail) msg = data.detail;
+              } catch {}
+              setStatus("✗ " + msg, "err");
+            }
+            resolve();
+          };
+          xhr.onerror = () => {
+            setStatus("✗ Network error. Make sure you're on the same Wi-Fi.", "err");
+            resolve();
+          };
+          xhr.send(form);
+        });
+      }
+
+      camera.addEventListener("change", (e) => {
+        upload(e.target.files);
+        e.target.value = "";
+      });
+      library.addEventListener("change", (e) => {
+        upload(e.target.files);
+        e.target.value = "";
+      });
+    </script>
+  </body>
+</html>

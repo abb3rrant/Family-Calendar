@@ -93,6 +93,15 @@ export interface GeneralSettings {
   slideshow_per_photo_seconds: number;
   slideshow_calendar_every_n: number;
   slideshow_calendar_seconds: number;
+  theme_auto: boolean;
+  theme_dark_start_hour: number;
+  theme_light_start_hour: number;
+}
+
+export interface LanUrl {
+  drop_url: string;
+  dashboard_url: string;
+  host: string;
 }
 
 export interface Photo {

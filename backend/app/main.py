@@ -23,6 +23,7 @@ from .routers import (
     hero,
     lights,
     meals,
+    network,
     notes,
     photos,
     recipes,
@@ -119,6 +120,7 @@ app.include_router(hero.router)
 app.include_router(notes.router)
 app.include_router(reminders.router)
 app.include_router(photos.router)
+app.include_router(network.router)
 app.include_router(weather.router)
 app.include_router(config_router.router)
 app.include_router(settings_router.router)
@@ -128,6 +130,18 @@ app.include_router(stream.router)
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+# Mobile photo-drop page — a single self-contained HTML file. Served before
+# the SPA mount so the path takes precedence.
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+
+@app.get("/drop")
+async def drop_page():
+    from fastapi.responses import FileResponse
+
+    return FileResponse(STATIC_DIR / "drop.html")
 
 
 FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QRCodeSVG } from "qrcode.react";
 import { api } from "../../api";
-import type { GeneralSettings, Photo } from "../../types";
+import type { GeneralSettings, LanUrl, Photo } from "../../types";
 
 const ACCEPT_TYPES = "image/jpeg,image/jpg,image/png,image/webp,image/heic";
 
@@ -186,8 +187,68 @@ export function PhotosPanel() {
         </div>
       </section>
 
+      <PhotoDropSection />
       <PhotoUploader photos={photos} />
     </div>
+  );
+}
+
+function PhotoDropSection() {
+  const { data: lan } = useQuery<LanUrl>({
+    queryKey: ["lan-url"],
+    queryFn: api.getLanUrl,
+    staleTime: 5 * 60_000,
+  });
+
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    if (!lan) return;
+    try {
+      await navigator.clipboard.writeText(lan.drop_url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <section className="rounded-xl bg-[var(--card)] p-4 space-y-3">
+      <div>
+        <h3 className="font-medium text-[var(--text)]">Family photo drop</h3>
+        <p className="text-xs text-[var(--text-muted)]">
+          Family members scan this QR from their phone (same Wi-Fi) to drop
+          photos straight into the slideshow — no accounts, no cloud.
+        </p>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="shrink-0 rounded-lg bg-white p-2">
+          {lan ? (
+            <QRCodeSVG value={lan.drop_url} size={128} />
+          ) : (
+            <div className="w-32 h-32 flex items-center justify-center text-xs text-slate-500">
+              Loading…
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 space-y-2">
+          <div>
+            <div className="text-xs text-[var(--text-muted)] mb-1">URL</div>
+            <div className="text-sm text-[var(--text)] font-mono break-all">
+              {lan?.drop_url ?? "…"}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={copy}
+            disabled={!lan}
+            className="rounded-lg bg-[var(--card-strong)] hover:bg-[var(--card-hover)] disabled:opacity-60 text-[var(--text)] px-3 py-1.5 text-xs"
+          >
+            {copied ? "Copied ✓" : "Copy URL"}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
 

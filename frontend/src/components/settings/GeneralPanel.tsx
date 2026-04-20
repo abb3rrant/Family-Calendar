@@ -210,6 +210,70 @@ export function GeneralPanel() {
       </section>
 
       <section className="rounded-xl bg-[var(--card)] p-4 space-y-3">
+        <h3 className="font-medium text-[var(--text)]">Theme</h3>
+        <label className="flex items-center justify-between text-sm text-[var(--text)]">
+          <span>Auto-switch dark/light by time of day</span>
+          <input
+            type="checkbox"
+            checked={draft.theme_auto}
+            onChange={(e) => {
+              const v = e.target.checked;
+              setDraft({ ...draft, theme_auto: v });
+              saveMut.mutate({ theme_auto: v });
+            }}
+          />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">
+              Dark mode starts at
+            </label>
+            <select
+              value={draft.theme_dark_start_hour}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                setDraft({ ...draft, theme_dark_start_hour: v });
+                saveMut.mutate({ theme_dark_start_hour: v });
+              }}
+              disabled={!draft.theme_auto}
+              className={inputCls + " disabled:opacity-60"}
+            >
+              {Array.from({ length: 24 }).map((_, h) => (
+                <option key={h} value={h}>
+                  {formatHour(h)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">
+              Light mode starts at
+            </label>
+            <select
+              value={draft.theme_light_start_hour}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                setDraft({ ...draft, theme_light_start_hour: v });
+                saveMut.mutate({ theme_light_start_hour: v });
+              }}
+              disabled={!draft.theme_auto}
+              className={inputCls + " disabled:opacity-60"}
+            >
+              {Array.from({ length: 24 }).map((_, h) => (
+                <option key={h} value={h}>
+                  {formatHour(h)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <p className="text-xs text-[var(--text-muted)]">
+          Manually tapping the theme icon still works between transitions —
+          auto only fires at the configured boundaries.
+        </p>
+      </section>
+
+      <section className="rounded-xl bg-[var(--card)] p-4 space-y-3">
         <h3 className="font-medium text-[var(--text)]">Sync</h3>
         <div>
           <label className="block text-xs text-[var(--text-muted)] mb-1">
@@ -536,6 +600,13 @@ function HolidayToggleRow({
       />
     </div>
   );
+}
+
+function formatHour(h: number): string {
+  if (h === 0) return "12 AM";
+  if (h === 12) return "12 PM";
+  if (h < 12) return `${h} AM`;
+  return `${h - 12} PM`;
 }
 
 function CountdownsSection() {

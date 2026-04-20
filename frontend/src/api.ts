@@ -14,6 +14,7 @@ import type {
   GroceryItem,
   HeroPayload,
   HvacMode,
+  LanUrl,
   Light,
   Meal,
   MealSlot,
@@ -350,4 +351,5 @@ export const api = {
   },
   deletePhoto: (id: number) =>
     jsonFetch<void>(`/api/photos/${id}`, { method: "DELETE" }),
+  getLanUrl: () => jsonFetch<LanUrl>("/api/network/lan-url"),
 };

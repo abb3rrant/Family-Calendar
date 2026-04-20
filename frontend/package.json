@@ -18,6 +18,7 @@
     "@fullcalendar/timegrid": "^6.1.15",
     "@tanstack/react-query": "^5.59.0",
     "date-fns": "^4.1.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-simple-keyboard": "^3.8.193",

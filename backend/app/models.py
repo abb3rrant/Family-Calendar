@@ -82,6 +82,9 @@ class Settings(Base):
     slideshow_per_photo_seconds: Mapped[int] = mapped_column(Integer, default=8)
     slideshow_calendar_every_n: Mapped[int] = mapped_column(Integer, default=5)
     slideshow_calendar_seconds: Mapped[int] = mapped_column(Integer, default=15)
+    theme_auto: Mapped[bool] = mapped_column(Boolean, default=False)
+    theme_dark_start_hour: Mapped[int] = mapped_column(Integer, default=20)
+    theme_light_start_hour: Mapped[int] = mapped_column(Integer, default=7)
 
 
 class Event(Base):

@@ -63,6 +63,9 @@ _ADDED_COLUMNS: list[tuple[str, str, str]] = [
     ("settings", "slideshow_per_photo_seconds", "INTEGER NOT NULL DEFAULT 8"),
     ("settings", "slideshow_calendar_every_n", "INTEGER NOT NULL DEFAULT 5"),
     ("settings", "slideshow_calendar_seconds", "INTEGER NOT NULL DEFAULT 15"),
+    ("settings", "theme_auto", "BOOLEAN NOT NULL DEFAULT 0"),
+    ("settings", "theme_dark_start_hour", "INTEGER NOT NULL DEFAULT 20"),
+    ("settings", "theme_light_start_hour", "INTEGER NOT NULL DEFAULT 7"),
 ]
 
 
