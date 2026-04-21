@@ -87,6 +87,7 @@ class Settings(Base):
     theme_light_start_hour: Mapped[int] = mapped_column(Integer, default=7)
     allowance_point_value_cents: Mapped[int] = mapped_column(Integer, default=25)
     allowance_week_starts_on: Mapped[int] = mapped_column(Integer, default=0)  # 0=Sun
+    ring_token: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class Event(Base):

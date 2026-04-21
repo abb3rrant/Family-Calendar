@@ -4,6 +4,9 @@ import type {
   AllowanceCompletion,
   Birthday,
   Person,
+  RingCamera,
+  RingLoginStart,
+  RingStatus,
   WeekSummary,
   CalendarEvent,
   CalendarMeta,
@@ -408,4 +411,21 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  ringStatus: () => jsonFetch<RingStatus>("/api/ring/status"),
+  ringStartLogin: (payload: { email: string; password: string }) =>
+    jsonFetch<RingLoginStart>("/api/ring/auth/start", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  ringSubmit2FA: (payload: { session_id: string; code: string }) =>
+    jsonFetch<RingLoginStart>("/api/ring/auth/2fa", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  ringDisconnect: () =>
+    jsonFetch<void>("/api/ring/disconnect", { method: "POST" }),
+  listRingCameras: () => jsonFetch<RingCamera[]>("/api/ring/cameras"),
+  ringSnapshotUrl: (deviceId: number, cacheBuster: number = Date.now()) =>
+    `/api/ring/cameras/${deviceId}/snapshot?t=${cacheBuster}`,
 };

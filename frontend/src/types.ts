@@ -144,6 +144,26 @@ export interface LanUrl {
   host: string;
 }
 
+export interface RingCamera {
+  id: number;
+  name: string;
+  kind: string;
+  family: string;
+  battery_life: number | null;
+  has_subscription: boolean;
+  snapshot_supported: boolean;
+}
+
+export interface RingStatus {
+  connected: boolean;
+}
+
+export interface RingLoginStart {
+  status: "connected" | "needs_2fa" | "error";
+  session_id: string | null;
+  detail: string | null;
+}
+
 export interface Photo {
   id: number;
   filename: string;

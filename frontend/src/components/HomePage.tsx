@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import type { ComfortRef, HvacMode, Light, Thermostat } from "../types";
+import { RingCameras } from "./RingCameras";
 
 export function HomePage() {
   return (
     <div className="h-full overflow-y-auto space-y-4 pr-1">
+      <RingCameras />
       <ThermostatSection />
       <LightsSection />
     </div>

@@ -29,6 +29,7 @@ from .routers import (
     photos,
     recipes,
     reminders,
+    ring,
     settings as settings_router,
     stream,
     weather,
@@ -123,6 +124,7 @@ app.include_router(reminders.router)
 app.include_router(photos.router)
 app.include_router(network.router)
 app.include_router(allowance.router)
+app.include_router(ring.router)
 app.include_router(weather.router)
 app.include_router(config_router.router)
 app.include_router(settings_router.router)

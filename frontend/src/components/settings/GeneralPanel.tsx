@@ -465,7 +465,171 @@ function IntegrationsSection({
       )}
 
       <EcobeeIntegration draft={draft} setDraft={setDraft} onSave={onSave} />
+
+      <RingIntegration />
     </section>
+  );
+}
+
+function RingIntegration() {
+  const queryClient = useQueryClient();
+  const { data: status } = useQuery<{ connected: boolean }>({
+    queryKey: ["ring-status"],
+    queryFn: api.ringStatus,
+  });
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const startMut = useMutation({
+    mutationFn: () => api.ringStartLogin({ email, password }),
+    onSuccess: (res) => {
+      setError(null);
+      if (res.status === "needs_2fa") {
+        setSessionId(res.session_id);
+      } else if (res.status === "connected") {
+        setEmail("");
+        setPassword("");
+        setCode("");
+        setSessionId(null);
+        queryClient.invalidateQueries({ queryKey: ["ring-status"] });
+        queryClient.invalidateQueries({ queryKey: ["ring-cameras"] });
+      } else {
+        setError(res.detail || "Ring login failed.");
+      }
+    },
+  });
+
+  const verifyMut = useMutation({
+    mutationFn: () =>
+      api.ringSubmit2FA({ session_id: sessionId!, code }),
+    onSuccess: (res) => {
+      if (res.status === "connected") {
+        setEmail("");
+        setPassword("");
+        setCode("");
+        setSessionId(null);
+        setError(null);
+        queryClient.invalidateQueries({ queryKey: ["ring-status"] });
+        queryClient.invalidateQueries({ queryKey: ["ring-cameras"] });
+      } else {
+        setError(res.detail || "Verification failed.");
+      }
+    },
+  });
+
+  const disconnectMut = useMutation({
+    mutationFn: () => api.ringDisconnect(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ring-status"] });
+      queryClient.invalidateQueries({ queryKey: ["ring-cameras"] });
+    },
+  });
+
+  const inputCls =
+    "w-full rounded-lg bg-[var(--card-strong)] text-[var(--text)] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]";
+
+  return (
+    <div className="pt-3 border-t border-[var(--border)] space-y-3">
+      <div className="text-xs text-[var(--text-muted)]">
+        <strong className="text-[var(--text-soft)]">Ring</strong> · uses an
+        unofficial API. We never share credentials, but Ring may flag the login
+        — proceed only on your own account.
+      </div>
+
+      {status?.connected ? (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-[var(--accent)]">✓ Connected to Ring</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("Disconnect Ring?")) disconnectMut.mutate();
+            }}
+            className="rounded-lg bg-[var(--danger-soft)] hover:opacity-80 text-[var(--danger)] px-3 py-2 text-sm"
+          >
+            Disconnect
+          </button>
+        </div>
+      ) : sessionId ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (code.trim()) verifyMut.mutate();
+          }}
+          className="rounded-lg bg-[var(--card-strong)] p-3 space-y-2"
+        >
+          <div className="text-xs text-[var(--text-muted)]">
+            Ring sent a 6-digit code to your phone or email. Enter it below to
+            finish connecting.
+          </div>
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="123456"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            className={`${inputCls} text-center text-2xl tracking-[0.5em]`}
+          />
+          {error && <div className="text-xs text-[var(--danger)]">{error}</div>}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSessionId(null);
+                setError(null);
+                setCode("");
+              }}
+              className="rounded-lg bg-[var(--card)] hover:bg-[var(--card-hover)] text-[var(--text)] px-3 py-2 text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={verifyMut.isPending || !code.trim()}
+              className="rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-60 text-white px-4 py-2 text-sm font-medium"
+            >
+              {verifyMut.isPending ? "Verifying…" : "Verify"}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (email.trim() && password) startMut.mutate();
+          }}
+          className="space-y-2"
+        >
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Ring account email"
+            autoComplete="email"
+            className={inputCls}
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Ring password"
+            autoComplete="current-password"
+            className={inputCls}
+          />
+          {error && <div className="text-xs text-[var(--danger)]">{error}</div>}
+          <button
+            type="submit"
+            disabled={startMut.isPending || !email.trim() || !password}
+            className="rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-60 text-white px-4 py-2 text-sm font-medium"
+          >
+            {startMut.isPending ? "Connecting…" : "Connect Ring"}
+          </button>
+        </form>
+      )}
+    </div>
   );
 }
 
