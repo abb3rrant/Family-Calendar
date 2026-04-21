@@ -24,13 +24,14 @@ export function HeroBanner() {
   const { data } = useQuery<HeroPayload>({
     queryKey: ["hero"],
     queryFn: api.getHero,
-    refetchInterval: 60_000,
+    refetchInterval: 120_000,
   });
 
-  // Tick every minute so "in 2h" stays accurate even between refetches
+  // Tick every two minutes so "in 2h" stays accurate without forcing a
+  // render every single minute on a low-end Pi.
   const [, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 60_000);
+    const id = setInterval(() => setTick((n) => n + 1), 120_000);
     return () => clearInterval(id);
   }, []);
 

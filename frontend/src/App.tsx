@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "./api";
 import type { CalendarMeta } from "./types";
@@ -13,21 +13,49 @@ import { SettingsButton } from "./components/SettingsButton";
 import { NotesButton } from "./components/NotesButton";
 import { OnScreenKeyboard } from "./components/OnScreenKeyboard";
 import { PagesContainer } from "./components/PagesContainer";
-import { MealPlannerPage } from "./components/MealPlannerPage";
-import { HomePage } from "./components/HomePage";
-import { ChoresPage } from "./components/ChoresPage";
 import { HeroBanner } from "./components/HeroBanner";
 import { PhotoSlideshow } from "./components/PhotoSlideshow";
 import { ConnectionStatus } from "./components/ConnectionStatus";
 import { useServerEvents } from "./lib/sse";
 
+// Code-split the other pages so the initial bundle stays small. On a Pi 3B
+// this cuts the time-to-interactive significantly: only the Calendar page's
+// FullCalendar + rrule bundle loads immediately; Meals/Home/Chores JS parses
+// on demand when the user first swipes to them.
+const MealPlannerPage = lazy(() =>
+  import("./components/MealPlannerPage").then((m) => ({ default: m.MealPlannerPage }))
+);
+const HomePage = lazy(() =>
+  import("./components/HomePage").then((m) => ({ default: m.HomePage }))
+);
+const ChoresPage = lazy(() =>
+  import("./components/ChoresPage").then((m) => ({ default: m.ChoresPage }))
+);
+
 const PAGE_LABELS = ["Calendar", "Meals", "Home", "Chores"];
+
+function PageFallback() {
+  return (
+    <div className="h-full flex items-center justify-center text-[var(--text-muted)] text-sm">
+      Loading…
+    </div>
+  );
+}
 
 export default function App() {
   const sseStatus = useServerEvents();
 
   const [view, setView] = useState<ViewKind>("week");
   const [pageIndex, setPageIndex] = useState(0);
+  // Track the furthest page the user has swiped to so once a page is
+  // mounted its state (scroll position, form drafts, TanStack cache wiring)
+  // survives swipes back and forth. Pages ahead of `maxVisited` are still
+  // lazy-loaded.
+  const [maxVisited, setMaxVisited] = useState(0);
+  const handlePageChange = (i: number) => {
+    setPageIndex(i);
+    if (i > maxVisited) setMaxVisited(i);
+  };
 
   const { data: calendars = [], isLoading, error } = useQuery<CalendarMeta[]>({
     queryKey: ["calendars"],
@@ -64,20 +92,26 @@ export default function App() {
         </div>
         <PagesContainer
           index={pageIndex}
-          onChange={setPageIndex}
+          onChange={handlePageChange}
           labels={PAGE_LABELS}
         >
           <div className="h-full">
             <CalendarView view={view} calendars={calendars} />
           </div>
           <div className="h-full">
-            <MealPlannerPage />
+            <Suspense fallback={<PageFallback />}>
+              {maxVisited >= 1 ? <MealPlannerPage /> : null}
+            </Suspense>
           </div>
           <div className="h-full">
-            <HomePage />
+            <Suspense fallback={<PageFallback />}>
+              {maxVisited >= 2 ? <HomePage /> : null}
+            </Suspense>
           </div>
           <div className="h-full">
-            <ChoresPage />
+            <Suspense fallback={<PageFallback />}>
+              {maxVisited >= 3 ? <ChoresPage /> : null}
+            </Suspense>
           </div>
         </PagesContainer>
         <HeroBanner />

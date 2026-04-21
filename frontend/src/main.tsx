@@ -7,8 +7,15 @@ import "./index.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      // The app gets live updates via SSE (see lib/sse.ts) so we don't need
+      // aggressive re-fetching. Long stale times reduce load on a Pi 3B
+      // without staleness being visible — mutations & SSE invalidate as
+      // soon as the backend changes.
+      staleTime: 60_000,
+      gcTime: 30 * 60_000,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
     },
   },
 });

@@ -22,7 +22,7 @@ export function Weather() {
   const { data } = useQuery<WeatherResponse>({
     queryKey: ["weather"],
     queryFn: api.getWeather,
-    refetchInterval: 15 * 60_000,
+    refetchInterval: 30 * 60_000,
   });
 
   if (!data) {
