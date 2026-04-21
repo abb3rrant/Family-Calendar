@@ -98,6 +98,7 @@ export interface GeneralSettings {
   theme_light_start_hour: number;
   allowance_point_value_cents: number;
   allowance_week_starts_on: number;
+  onscreen_keyboard_always: boolean;
 }
 
 export interface Person {

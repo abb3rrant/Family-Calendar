@@ -88,6 +88,7 @@ class Settings(Base):
     allowance_point_value_cents: Mapped[int] = mapped_column(Integer, default=25)
     allowance_week_starts_on: Mapped[int] = mapped_column(Integer, default=0)  # 0=Sun
     ring_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    onscreen_keyboard_always: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Event(Base):

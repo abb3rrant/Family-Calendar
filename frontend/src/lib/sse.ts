@@ -1,22 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export type SseStatus = "connecting" | "connected" | "disconnected";
 
+// Hide short blips (≤ this many ms) — EventSource auto-reconnects in ~3s
+// and Pi 3B+ WiFi power-save flaps can cause brief drops. Only show the
+// "Disconnected" banner if we stay down longer than this.
+const DISCONNECT_GRACE_MS = 6000;
+
 export function useServerEvents(): SseStatus {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<SseStatus>("connecting");
+  const downTimer = useRef<number | null>(null);
 
   useEffect(() => {
+    const cancelDown = () => {
+      if (downTimer.current !== null) {
+        window.clearTimeout(downTimer.current);
+        downTimer.current = null;
+      }
+    };
+    const markConnected = () => {
+      cancelDown();
+      setStatus("connected");
+    };
+
     const source = new EventSource("/api/stream");
 
-    source.addEventListener("hello", () => setStatus("connected"));
+    source.addEventListener("hello", markConnected);
 
     // Treat any successful message after a drop as proof we're back online
-    source.addEventListener("ping", () => setStatus("connected"));
+    source.addEventListener("ping", markConnected);
 
     source.addEventListener("update", (e) => {
-      setStatus("connected");
+      markConnected();
       const payload = (e as MessageEvent).data;
       if (payload === "events-updated") {
         queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -50,14 +67,22 @@ export function useServerEvents(): SseStatus {
     });
 
     source.onerror = () => {
-      // EventSource auto-reconnects (~3s) on most browsers; surface the
-      // disconnected state so the UI can show a small reconnecting badge.
-      setStatus("disconnected");
+      // EventSource auto-reconnects (~3s on Chromium). Pi 3B+ WiFi
+      // power-save blips can drop the stream for 1-3s and recover
+      // silently — only surface the banner if we actually stay down.
+      if (downTimer.current !== null) return;
+      downTimer.current = window.setTimeout(() => {
+        setStatus("disconnected");
+        downTimer.current = null;
+      }, DISCONNECT_GRACE_MS);
     };
 
-    source.onopen = () => setStatus("connected");
+    source.onopen = markConnected;
 
-    return () => source.close();
+    return () => {
+      cancelDown();
+      source.close();
+    };
   }, [queryClient]);
 
   return status;

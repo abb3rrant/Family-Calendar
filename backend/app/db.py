@@ -69,6 +69,7 @@ _ADDED_COLUMNS: list[tuple[str, str, str]] = [
     ("settings", "allowance_point_value_cents", "INTEGER NOT NULL DEFAULT 25"),
     ("settings", "allowance_week_starts_on", "INTEGER NOT NULL DEFAULT 0"),
     ("settings", "ring_token", "TEXT"),
+    ("settings", "onscreen_keyboard_always", "BOOLEAN NOT NULL DEFAULT 0"),
 ]
 
 

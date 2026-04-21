@@ -210,6 +210,28 @@ export function GeneralPanel() {
       </section>
 
       <section className="rounded-xl bg-[var(--card)] p-4 space-y-3">
+        <h3 className="font-medium text-[var(--text)]">Kiosk</h3>
+        <label className="flex items-center justify-between text-sm text-[var(--text)]">
+          <div>
+            <div>Always show on-screen keyboard</div>
+            <div className="text-xs text-[var(--text-muted)]">
+              Turn on for Pi kiosk use — some browsers don't report touch
+              reliably, so auto-detect misses it.
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={draft.onscreen_keyboard_always}
+            onChange={(e) => {
+              const v = e.target.checked;
+              setDraft({ ...draft, onscreen_keyboard_always: v });
+              saveMut.mutate({ onscreen_keyboard_always: v });
+            }}
+          />
+        </label>
+      </section>
+
+      <section className="rounded-xl bg-[var(--card)] p-4 space-y-3">
         <h3 className="font-medium text-[var(--text)]">Theme</h3>
         <label className="flex items-center justify-between text-sm text-[var(--text)]">
           <span>Auto-switch dark/light by time of day</span>

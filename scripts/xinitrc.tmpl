@@ -1,6 +1,10 @@
 #!/bin/sh
 # X session for the calendar kiosk. Run by `startx` automatically on login.
 
+# Paint the X root window the same dark navy as the dashboard so the brief
+# gap between X starting and Chromium painting isn't a grey flash.
+xsetroot -solid '#0f172a' 2>/dev/null || true
+
 # Disable screen blanking & power management
 xset s off
 xset -dpms

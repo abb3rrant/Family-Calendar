@@ -168,6 +168,26 @@ if [[ -f "$CONFIG" ]]; then
   fi
 fi
 
+echo "==> Disabling WiFi power save (prevents SSE dropouts on Pi 3B+)"
+# Pi 3B+ defaults to aggressive WiFi power-save which causes brief network
+# flaps (1-3s at a time). That breaks long-lived HTTP connections like our
+# SSE stream. We disable it at every boot via a systemd unit.
+cat > /etc/systemd/system/wifi-powersave-off.service <<'EOF'
+[Unit]
+Description=Turn off WiFi power save for reliable SSE connections
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'for i in $(ls /sys/class/net | grep -E "^wl"); do /sbin/iw "$i" set power_save off || /sbin/iwconfig "$i" power off || true; done'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable wifi-powersave-off.service
+
 systemctl daemon-reload
 systemctl enable calendar-backend.service
 

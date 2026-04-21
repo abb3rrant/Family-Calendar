@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useQuery } from "@tanstack/react-query";
 import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
+import { api } from "../api";
+import type { GeneralSettings } from "../types";
 
 type Target = HTMLInputElement | HTMLTextAreaElement;
 type LayoutKind = "qwerty" | "numeric";
@@ -119,11 +122,29 @@ export function OnScreenKeyboard({ forceEnable = false }: Props) {
   const [mode, setMode] = useState<Mode>("default");
   const blurTimer = useRef<number | null>(null);
 
+  const { data: settings } = useQuery<GeneralSettings>({
+    queryKey: ["general-settings"],
+    queryFn: api.getGeneralSettings,
+    staleTime: Infinity,
+  });
+
   const enabled = useMemo(() => {
     if (forceEnable) return true;
+    if (settings?.onscreen_keyboard_always) return true;
     if (typeof window === "undefined") return false;
-    return window.matchMedia("(pointer: coarse)").matches;
-  }, [forceEnable]);
+    // Chromium on Raspberry Pi sometimes reports the primary pointer as
+    // "fine" even when a touchscreen is active (if a mouse is also
+    // connected, or when the kernel hid-multitouch driver registers the
+    // device after Chromium starts). `any-pointer: coarse` matches if ANY
+    // connected pointer is touch, which catches those cases. We also look
+    // for ontouchstart as a final heuristic for older WebKit quirks.
+    const mq = window.matchMedia;
+    return (
+      (mq && mq("(any-pointer: coarse)").matches) ||
+      (mq && mq("(pointer: coarse)").matches) ||
+      "ontouchstart" in window
+    );
+  }, [forceEnable, settings?.onscreen_keyboard_always]);
 
   useEffect(() => {
     if (!enabled) return;
