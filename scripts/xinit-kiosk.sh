@@ -6,7 +6,18 @@ set -euo pipefail
 
 URL="${1:-http://localhost:8000/}"
 
-exec chromium-browser \
+# Trixie ships `chromium`; Bookworm ships `chromium-browser`. Pick whichever
+# is on PATH.
+if command -v chromium >/dev/null 2>&1; then
+  CHROMIUM=chromium
+elif command -v chromium-browser >/dev/null 2>&1; then
+  CHROMIUM=chromium-browser
+else
+  echo "Neither chromium nor chromium-browser is installed" >&2
+  exit 1
+fi
+
+exec "$CHROMIUM" \
   --kiosk \
   --noerrdialogs \
   --disable-translate \

@@ -34,6 +34,16 @@ echo "==> Updating apt cache"
 apt-get update
 
 echo "==> Installing kiosk packages (X, openbox, chromium)"
+# Chromium package renamed to `chromium` on Debian Trixie (Pi OS 2024+).
+# Older Pi OS Bookworm still ships `chromium-browser`. Prefer the new name,
+# fall back to the old one if it's not in the apt repo yet.
+if apt-cache show chromium >/dev/null 2>&1; then
+  CHROMIUM_PKG=chromium
+else
+  CHROMIUM_PKG=chromium-browser
+fi
+echo "    using package: $CHROMIUM_PKG"
+
 apt-get install -y --no-install-recommends \
   xserver-xorg \
   xserver-xorg-legacy \
@@ -41,7 +51,7 @@ apt-get install -y --no-install-recommends \
   x11-xserver-utils \
   openbox \
   unclutter \
-  chromium-browser \
+  "$CHROMIUM_PKG" \
   fonts-noto-color-emoji \
   fonts-inter \
   curl ca-certificates \

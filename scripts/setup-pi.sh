@@ -17,9 +17,15 @@ fi
 
 echo "==> Installing system packages"
 apt-get update
+# Chromium package renamed to `chromium` on Debian Trixie (Pi OS 2024+).
+if apt-cache show chromium >/dev/null 2>&1; then
+  CHROMIUM_PKG=chromium
+else
+  CHROMIUM_PKG=chromium-browser
+fi
 apt-get install -y \
   python3 python3-venv python3-pip \
-  chromium-browser \
+  "$CHROMIUM_PKG" \
   unclutter \
   curl ca-certificates
 
