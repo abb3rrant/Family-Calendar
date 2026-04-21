@@ -60,9 +60,13 @@ apt-get install -y --no-install-recommends \
   python3 python3-venv python3-pip
 
 # xserver-xorg-legacy is needed so a non-root user can start X via startx.
-# Allow any user to start the X server:
-sed -i 's/^allowed_users=.*/allowed_users=anybody/' /etc/X11/Xwrapper.config 2>/dev/null || \
-  echo "allowed_users=anybody" > /etc/X11/Xwrapper.config
+# Two things matter on Debian Trixie:
+#   - allowed_users=anybody    : any user can launch the X server
+#   - needs_root_rights=yes    : X gets the tty0 access it needs to set up VT
+cat > /etc/X11/Xwrapper.config <<'EOF'
+allowed_users=anybody
+needs_root_rights=yes
+EOF
 
 if ! command -v node >/dev/null; then
   echo "==> Installing Node.js 20 from NodeSource"
@@ -97,10 +101,21 @@ sed "s|@REPO@|$REPO_ROOT|g" \
 chmod +x "$USER_HOME/.xinitrc"
 chown "$USER_NAME":"$USER_NAME" "$USER_HOME/.xinitrc"
 
-# Auto-startx after login on tty1
-PROFILE_LINE='[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && exec startx -- -nocursor'
-if ! grep -qF "$PROFILE_LINE" "$USER_HOME/.bash_profile" 2>/dev/null; then
-  echo "$PROFILE_LINE" >> "$USER_HOME/.bash_profile"
+# Auto-startx after login on tty1. Using `$(tty)` is more reliable than
+# checking $XDG_VTNR (which is sometimes unset on Trixie Lite) and
+# importantly, it does NOT fire over SSH (which gives /dev/pts/N) — so we
+# don't accidentally kill SSH sessions when debugging.
+PROFILE_MARKER='# --- calendar kiosk autostart ---'
+if ! grep -qF "$PROFILE_MARKER" "$USER_HOME/.bash_profile" 2>/dev/null; then
+  # Strip any previous (broken) guard we may have left from older versions
+  sed -i '/exec startx -- -nocursor/d' "$USER_HOME/.bash_profile" 2>/dev/null || true
+  cat >> "$USER_HOME/.bash_profile" <<'EOF'
+
+# --- calendar kiosk autostart ---
+if [ "$(tty)" = "/dev/tty1" ] && [ -z "${DISPLAY:-}" ]; then
+  exec startx -- -nocursor
+fi
+EOF
   chown "$USER_NAME":"$USER_NAME" "$USER_HOME/.bash_profile"
 fi
 
@@ -116,8 +131,13 @@ echo "==> Tuning /boot/firmware/config.txt"
 CONFIG=/boot/firmware/config.txt
 [[ ! -f "$CONFIG" ]] && CONFIG=/boot/config.txt
 if [[ -f "$CONFIG" ]]; then
-  if ! grep -q "^gpu_mem=" "$CONFIG"; then
-    echo "gpu_mem=128" >> "$CONFIG"
+  # More GPU memory helps Chromium compositing on the Pi 3B VideoCore IV.
+  # 256 is generally the sweet spot; the remaining 768MB is plenty for the
+  # backend + X + browser on a 1GB Pi 3B.
+  if grep -q "^gpu_mem=" "$CONFIG"; then
+    sed -i 's/^gpu_mem=.*/gpu_mem=256/' "$CONFIG"
+  else
+    echo "gpu_mem=256" >> "$CONFIG"
   fi
   # Keep HDMI alive even with no signal at boot
   if ! grep -q "^hdmi_force_hotplug=1" "$CONFIG"; then
@@ -126,6 +146,25 @@ if [[ -f "$CONFIG" ]]; then
   # Disable display blanking by Pi firmware
   if ! grep -q "^disable_overscan=1" "$CONFIG"; then
     echo "disable_overscan=1" >> "$CONFIG"
+  fi
+  # Only the original Pi 3B (not 3B+ or later) benefits from a modest
+  # overclock — stock 1.2 GHz → 1.35 GHz. Pi 3B+ already runs at 1.4 GHz
+  # with different silicon and our over_voltage value can destabilise it,
+  # so we skip this entirely on anything newer.
+  PI_MODEL="$(tr -d '\0' < /proc/device-tree/model 2>/dev/null || echo '')"
+  if [[ "$PI_MODEL" == "Raspberry Pi 3 Model B Rev"* ]] \
+     && ! grep -q "^arm_freq=" "$CONFIG"; then
+    {
+      echo ""
+      echo "# Family Calendar: modest overclock for smoother UI on Pi 3B."
+      echo "# Safe with a heatsink; comment out if the Pi ever hits 85°C."
+      echo "arm_freq=1350"
+      echo "over_voltage=4"
+      echo "temp_limit=75"
+    } >> "$CONFIG"
+    echo "    Applied overclock for Pi 3B"
+  elif [[ -n "$PI_MODEL" ]]; then
+    echo "    Skipping overclock (detected: $PI_MODEL — already fast enough)"
   fi
 fi
 

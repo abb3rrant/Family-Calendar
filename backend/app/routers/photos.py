@@ -8,6 +8,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 
@@ -25,6 +26,11 @@ PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic"}
 MAX_BYTES = 25 * 1024 * 1024  # 25 MB
 
+# Cap the stored dimensions. A 15.6" kiosk runs at 1080p; anything larger
+# costs decode time + RAM on a Pi 3B without visible benefit.
+MAX_LONG_EDGE = 1920
+JPEG_QUALITY = 85
+
 # Strip anything that isn't safe to round-trip through JSON to the frontend
 # without leaking HTML/JS that some downstream renderer might interpret.
 _UNSAFE_NAME_CHARS = re.compile(r"[^\w\s.\-+()\[\]]+", re.UNICODE)
@@ -37,6 +43,41 @@ def _sanitize_original_name(raw: str | None) -> str | None:
     base = Path(raw).name
     cleaned = _UNSAFE_NAME_CHARS.sub("", base).strip()
     return cleaned[:120] or None
+
+
+def _downscale_in_place(path: Path) -> tuple[int, str]:
+    """Resize photo to fit within MAX_LONG_EDGE and re-save as JPEG.
+
+    Slideshow on a Pi 3B gets noticeably smoother when photos are ≤1920 on
+    their long edge. Returns (new_size_bytes, new_content_type).
+    """
+    try:
+        with Image.open(path) as im:
+            im.load()
+            # EXIF-aware orientation
+            try:
+                from PIL import ImageOps
+
+                im = ImageOps.exif_transpose(im)
+            except Exception:
+                pass
+            # Convert to RGB so we can re-save as JPEG reliably (handles
+            # RGBA PNGs by compositing over white).
+            if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+                bg = Image.new("RGB", im.size, (0, 0, 0))
+                bg.paste(im, mask=im.split()[-1] if im.mode.endswith("A") else None)
+                im = bg
+            elif im.mode != "RGB":
+                im = im.convert("RGB")
+            if max(im.size) > MAX_LONG_EDGE:
+                im.thumbnail((MAX_LONG_EDGE, MAX_LONG_EDGE), Image.Resampling.LANCZOS)
+            # Rewrite as JPEG at a consistent quality; extension stays what
+            # we saved with (the filename may still say .png but the bytes
+            # will be JPEG — browsers don't care).
+            im.save(path, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+    except UnidentifiedImageError:
+        raise HTTPException(status_code=400, detail="Not a valid image file")
+    return path.stat().st_size, "image/jpeg"
 
 
 class PhotoOut(BaseModel):
@@ -105,12 +146,19 @@ async def upload_photos(files: list[UploadFile] = File(...)):
                         detail=f"File too large (max {MAX_BYTES // (1024 * 1024)} MB)",
                     )
                 out.write(chunk)
+        # Downscale + normalize to JPEG so the slideshow decodes quickly on
+        # a Pi 3B. Handles EXIF rotation and alpha channels.
+        try:
+            new_size, new_ct = _downscale_in_place(dest)
+        except HTTPException:
+            dest.unlink(missing_ok=True)
+            raise
         with session_scope() as session:
             row = Photo(
                 filename=new_name,
                 original_name=_sanitize_original_name(f.filename),
-                content_type=ct,
-                size_bytes=size,
+                content_type=new_ct,
+                size_bytes=new_size,
             )
             session.add(row)
             session.flush()

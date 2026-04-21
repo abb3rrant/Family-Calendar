@@ -45,5 +45,14 @@ exec "$CHROMIUM" \
   --disable-component-update \
   --disable-background-networking \
   --enable-features=OverlayScrollbar \
+  --ignore-gpu-blocklist \
+  --enable-gpu-rasterization \
+  --enable-zero-copy \
+  --enable-accelerated-video-decode \
+  --enable-accelerated-2d-canvas \
+  --canvas-oop-rasterization \
+  --disable-smooth-scrolling \
+  --disable-features=CalculateNativeWinOcclusion \
+  --process-per-site \
   --start-fullscreen \
   --app="$URL"
