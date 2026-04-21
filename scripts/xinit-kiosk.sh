@@ -17,8 +17,20 @@ else
   exit 1
 fi
 
+# Wait up to 90s for the backend to answer before launching Chromium.
+# On a cold Pi 3B boot the backend can take ~30-40s to come up.
+for _ in $(seq 1 90); do
+  if curl -fsS --max-time 1 "$URL" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
 exec "$CHROMIUM" \
   --kiosk \
+  --ozone-platform=x11 \
+  --touch-events=enabled \
+  --pull-to-refresh=0 \
   --noerrdialogs \
   --disable-translate \
   --disable-infobars \

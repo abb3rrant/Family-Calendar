@@ -47,6 +47,8 @@ echo "    using package: $CHROMIUM_PKG"
 apt-get install -y --no-install-recommends \
   xserver-xorg \
   xserver-xorg-legacy \
+  xserver-xorg-input-libinput \
+  xserver-xorg-input-evdev \
   xinit \
   x11-xserver-utils \
   openbox \
